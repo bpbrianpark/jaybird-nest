@@ -11,6 +11,7 @@ type Config struct {
 	CloudinaryCloudName string
 	CloudinaryAPIKey    string
 	CloudinaryAPISecret string
+	CORSAllowedURL      string
 	PythonInferenceURL  string
 	TempDir             string
 }
@@ -23,6 +24,7 @@ func LoadConfig() (*Config, error) {
 		CloudinaryCloudName: os.Getenv("CLOUDINARY_CLOUD_NAME"),
 		CloudinaryAPIKey:    os.Getenv("CLOUDINARY_API_KEY"),
 		CloudinaryAPISecret: os.Getenv("CLOUDINARY_API_SECRET"),
+		CORSAllowedURL:      os.Getenv("CORS_ALLOWED_URL"),
 		PythonInferenceURL:  getEnvOrDefault("PYTHON_INFERENCE_URL", "http://localhost:8000/infer"),
 		TempDir:             getEnvOrDefault("TEMP_DIR", os.TempDir()),
 	}
