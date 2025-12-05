@@ -1,6 +1,6 @@
 <div style="display: flex; gap: 10px; flex-wrap: 
 nowrap;">
-  <img src="/public/jasonparkphotographylogo.png" 
+  <img src="/public/jaybirdnest.png" 
 alt="Jason Park Photography Logo">
 </div>
 
