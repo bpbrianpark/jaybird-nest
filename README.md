@@ -4,7 +4,7 @@ nowrap;">
 alt="Jason Park Photography Logo">
 </div>
 
-# Nest - Cloudinary Image/Video Uploader
+# Nest - File Upload Service
 
 A Go-based REST API for handling file uploads with Cloudinary integration and ML tag inference. Built with Gin framework.
 
