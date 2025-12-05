@@ -4,11 +4,11 @@ nowrap;">
 alt="Jason Park Photography Logo">
 </div>
 
-(yes, I made the logo in like 30 seconds)
-
 # Nest - Cloudinary Image/Video Uploader
 
 A Go-based REST API for handling file uploads with Cloudinary integration and ML tag inference. Built with Gin framework.
+
+(yes, I made the logo in like 30 seconds)
 
 # Why?
 I used to have my Next.JS application (https://github.com/bpbrianpark/jaybird/) hooked up to the Cloudinary API directly, but I found that it was quite slow when uploading large amounts of large files.
