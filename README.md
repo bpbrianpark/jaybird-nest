@@ -4,7 +4,9 @@ nowrap;">
 alt="Jason Park Photography Logo">
 </div>
 
-# Jaybird Nest - Cloudinary Image/Video Uploader
+(yes, I made the logo in like 30 seconds)
+
+# Nest - Cloudinary Image/Video Uploader
 
 A Go-based REST API for handling file uploads with Cloudinary integration and ML tag inference. Built with Gin framework.
 
