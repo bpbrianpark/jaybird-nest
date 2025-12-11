@@ -3,6 +3,8 @@ from pathlib import Path
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
+from sklearn.model_selection import train_test_split
+from torch.utils.data import DataLoader
 
 def get_train_transform():
     """Get training transforms with augmentation."""
@@ -22,6 +24,12 @@ def get_val_transform():
         transforms.Normalize(mean=[0.485, 0.456, 0.406], 
                            std=[0.229, 0.224, 0.225])
     ])
+
+def create_data_loaders(train_dataset, val_dataset, test_dataset, batch_size=2, shuffle=True):
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+    return train_loader, val_loader, test_loader
 
 def get_class_mapping():
     return {
@@ -85,6 +93,12 @@ def load_image_with_label(image_path, class_mapping):
     image = Image.open(image_path).convert('RGB')
 
     return image, label
+
+def split_data(image_paths, class_mapping, train_ratio=0.7, val_ratio=0.15):
+    for class_name, class_paths in image_paths.items():
+        train, temp = train_test_split(class_paths, test_size=0.3, random_state=42)
+        val, test = train_test_split(temp, test_size=0.5, random_state=42)
+    return train, val, test
 
 if __name__ == "__main__":
     data_dir = "../photo_data"
