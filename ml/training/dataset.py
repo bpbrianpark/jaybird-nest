@@ -1,7 +1,8 @@
 import os
 from pathlib import Path
+from PIL import Image
 from torch.utils.data import Dataset
-from torchvision import transform
+from torchvision import transforms
 
 def get_train_transform():
     """Get training transforms with augmentation."""
@@ -22,6 +23,26 @@ def get_val_transform():
                            std=[0.229, 0.224, 0.225])
     ])
 
+def get_class_mapping():
+    return {
+        'barred_owl': 0,
+        'bear': 1,
+        'coyote': 2,
+        'hummingbird': 3,
+        'osprey': 4,
+        'sandhill_crane': 5
+    }
+
+def get_idx_to_class():
+    return {
+        0: 'barred_owl',
+        1: 'bear',
+        2: 'coyote',
+        3: 'hummingbird',
+        4: 'osprey',
+        5: 'sandhill_crane'
+    }
+
 class AnimalDataset(Dataset):
     def __init__(self, image_paths, class_mapping, transform=None):
         self.image_paths = image_paths
@@ -41,16 +62,6 @@ class AnimalDataset(Dataset):
 
         return image, label
 
-def get_class_mapping():
-    return {
-
-    }
-
-def get_idx_to_class():
-    return {
-
-    }
-
 def get_image_paths(data_dir):
     image_extensions = {'.jpg', '.jpeg', '.png', '.gif'}
     paths = []
@@ -64,10 +75,35 @@ def get_image_paths(data_dir):
 
 def load_image_with_label(image_path, class_mapping):
     path_obj = Path(image_path)
-    class_name = path_obj.parent-name.lower()
-
+    class_name = path_obj.parent.name.lower()
+    
+    if class_name not in class_mapping:
+        raise ValueError(f"Unknown class: {path_obj.parent.name}. Expected one of: {list(set(class_mapping.keys()))}")
+    
     label = class_mapping[class_name]
 
     image = Image.open(image_path).convert('RGB')
 
     return image, label
+
+if __name__ == "__main__":
+    data_dir = "../photo_data"
+    paths = get_image_paths(data_dir)
+    mapping = get_class_mapping()
+    idx_to_class = get_idx_to_class()
+    
+    print(f"Found {len(paths)} images")
+    print(f"Classes: {list(idx_to_class.values())}")
+    
+    if paths:
+        img, label = load_image_with_label(paths[0], mapping)
+        class_name = idx_to_class[label]
+        print(f"Loaded image: {paths[0]}")
+        print(f"Class: {class_name}, Label: {label}")
+    
+    transform = get_train_transform()
+    dataset = AnimalDataset(paths, mapping, transform=transform)
+    print(f"\nDataset size: {len(dataset)}")
+    img_tensor, label = dataset[0]
+    print(f"Image tensor shape: {img_tensor.shape}, Label: {label}")
+    print(f"Class name: {idx_to_class[label]}")
