@@ -1,0 +1,11 @@
+.git
+.gitignore
+*.md
+venv/
+__pycache__/
+*.pyc
+.env
+photo_data/
+public/
+*.log
+main
