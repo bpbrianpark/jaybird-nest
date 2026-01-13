@@ -95,10 +95,59 @@ def load_image_with_label(image_path, class_mapping):
     return image, label
 
 def split_data(image_paths, class_mapping, train_ratio=0.7, val_ratio=0.15):
-    for class_name, class_paths in image_paths.items():
-        train, temp = train_test_split(class_paths, test_size=0.3, random_state=42)
-        val, test = train_test_split(temp, test_size=0.5, random_state=42)
-    return train, val, test
+    from collections import defaultdict
+    from sklearn.model_selection import train_test_split
+    
+    paths_by_class = defaultdict(list)
+    
+    for image_path in image_paths:
+        path_obj = Path(image_path)
+        class_name = path_obj.parent.name.lower().strip()
+        
+        if class_name not in class_mapping:
+            class_name = class_name.replace(' ', '_')
+        
+        if class_name in class_mapping:
+            paths_by_class[class_name].append(image_path)
+        else:
+            print(f"Warning: Skipping image with unknown class: {class_name}")
+    
+    train_paths = []
+    val_paths = []
+    test_paths = []
+    
+    for class_name, class_paths in paths_by_class.items():
+        if len(class_paths) < 3:
+            print(f"Warning: Class '{class_name}' has only {len(class_paths)} images. Using all for training.")
+            train_paths.extend(class_paths)
+            continue
+        
+        # First split: train vs (val+test)
+        test_size = 1 - train_ratio  
+        train, temp = train_test_split(
+            class_paths, 
+            test_size=test_size, 
+            random_state=42
+        )
+        
+        # Second split: val vs test
+        val_size = val_ratio / test_size 
+        val, test = train_test_split(
+            temp, 
+            test_size=val_size, 
+            random_state=42
+        )
+        
+        train_paths.extend(train)
+        val_paths.extend(val)
+        test_paths.extend(test)
+    
+    print(f"Data split:")
+    print(f"  Train: {len(train_paths)} images")
+    print(f"  Val: {len(val_paths)} images")
+    print(f"  Test: {len(test_paths)} images")
+    
+    return train_paths, val_paths, test_paths
 
 if __name__ == "__main__":
     data_dir = "../photo_data"

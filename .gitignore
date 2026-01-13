@@ -28,6 +28,15 @@ go.work.sum
 .env
 .env.local
 
+photo_data
+
+ml/venv/
+
+.venv
+
+ml/training/__pycache__
+ml/inference/__pycache__
+
 # Editor/IDE
 # .idea/
 # .vscode/

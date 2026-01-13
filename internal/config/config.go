@@ -25,7 +25,7 @@ func LoadConfig() (*Config, error) {
 		CloudinaryAPIKey:    os.Getenv("CLOUDINARY_API_KEY"),
 		CloudinaryAPISecret: os.Getenv("CLOUDINARY_API_SECRET"),
 		CORSAllowedURL:      os.Getenv("CORS_ALLOWED_URL"),
-		PythonInferenceURL:  getEnvOrDefault("PYTHON_INFERENCE_URL", "http://localhost:8000/infer"),
+		PythonInferenceURL:  getEnvOrDefault("PYTHON_INFERENCE_URL", "http://localhost:8000"),
 		TempDir:             getEnvOrDefault("TEMP_DIR", os.TempDir()),
 	}
 
