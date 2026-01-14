@@ -25,7 +25,7 @@ WORKDIR /root/
 COPY --from=builder /app/main .
 
 # Copy .env file
-COPY .env .env
+# COPY .env .env
 
 EXPOSE 8080
 
