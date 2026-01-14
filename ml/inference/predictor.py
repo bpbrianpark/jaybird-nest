@@ -113,6 +113,10 @@ def preprocess_image(image_path_or_bytes, metadata):
     
     return image_tensor
 
+def format_class_name(class_name):
+    # Replace underscores with spaces and title case each word
+    return class_name.replace('_', ' ').title()
+
 def predict(model, image_tensor, metadata):
     model.eval()
     
@@ -189,10 +193,19 @@ def infer(request: InferenceRequest):
         # Get prediction
         class_name, confidence, confidence_dict = predict(model, image_tensor, metadata)
         
+        # Format class name for display
+        formatted_class_name = format_class_name(class_name)
+        
+        # Format confidence dict keys as well
+        formatted_confidence_dict = {
+            format_class_name(key): value 
+            for key, value in confidence_dict.items()
+        }
+        
         # Return in format expected
         return InferenceResponse(
-            tags=[class_name],
-            confidence=confidence_dict
+            tags=[formatted_class_name],
+            confidence=formatted_confidence_dict
         )
     
     except Exception as e:
