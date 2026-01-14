@@ -2,20 +2,22 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# Install system dependencies for PyTorch
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
+# Install PyTorch CPU-only version first 
+RUN pip install --no-cache-dir \
+    torch torchvision --index-url https://download.pytorch.org/whl/cpu
 
-# Copy requirements first for better caching
-COPY ml/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Install production requirements (without torch/torchvision)
+COPY ml/requirements-prod.txt ./requirements-prod.txt
+RUN pip install --no-cache-dir -r requirements-prod.txt
 
 # Copy the model registry (needed for inference)
 COPY model_registry/ ./model_registry/
 
 # Copy the inference service code
 COPY ml/inference/ ./ml/inference/
+
+# Set PYTHONPATH so imports work
+ENV PYTHONPATH=/app
 
 EXPOSE 8000
 
