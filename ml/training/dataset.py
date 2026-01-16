@@ -31,25 +31,54 @@ def create_data_loaders(train_dataset, val_dataset, test_dataset, batch_size=2, 
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
     return train_loader, val_loader, test_loader
 
-def get_class_mapping():
-    return {
-        'barred_owl': 0,
-        'bear': 1,
-        'coyote': 2,
-        'hummingbird': 3,
-        'osprey': 4,
-        'sandhill_crane': 5
-    }
+def detect_classes_from_dataset(data_dir):
+    """Automatically detect class names from dataset folder structure."""
+    data_path = Path(data_dir)
+    if not data_path.exists():
+        raise ValueError(f"Dataset directory not found: {data_dir}")
+    
+    # Look for folders that contain images
+    image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.bmp'}
+    classes = []
+    
+    for item in data_path.iterdir():
+        if item.is_dir():
+            has_images = any(
+                child.suffix.lower() in image_extensions 
+                for child in item.iterdir() 
+                if child.is_file()
+            )
+            if has_images:
+                classes.append(item.name.lower().strip())
+    
+    if not classes:
+        raise ValueError(f"No class folders with images found in {data_dir}")
+    
+    classes.sort() 
+    print(f"Detected {len(classes)} classes from dataset: {classes}")
+    return classes
 
-def get_idx_to_class():
-    return {
-        0: 'barred_owl',
-        1: 'bear',
-        2: 'coyote',
-        3: 'hummingbird',
-        4: 'osprey',
-        5: 'sandhill_crane'
-    }
+def get_class_mapping(data_dir=None):
+    """Get class to index mapping."""
+    if data_dir:
+        classes = detect_classes_from_dataset(data_dir)
+    else:
+        # Fallback to hardcoded classes for backward compatibility
+        classes = ['barred_owl', 'bear', 'coyote', 'hummingbird', 'osprey', 'sandhill_crane']
+        print(f"Using default classes: {classes}")
+    
+    return {cls: i for i, cls in enumerate(classes)}
+
+def get_idx_to_class(data_dir=None):
+    """Get index to class mapping."""
+    if data_dir:
+        classes = detect_classes_from_dataset(data_dir)
+    else:
+        # Fallback to hardcoded classes for backward compatibility
+        classes = ['barred_owl', 'bear', 'coyote', 'hummingbird', 'osprey', 'sandhill_crane']
+        print(f"Using default classes: {classes}")
+    
+    return {i: cls for i, cls in enumerate(classes)}
 
 class AnimalDataset(Dataset):
     def __init__(self, image_paths, class_mapping, transform=None):
@@ -152,8 +181,8 @@ def split_data(image_paths, class_mapping, train_ratio=0.7, val_ratio=0.15):
 if __name__ == "__main__":
     data_dir = "../photo_data"
     paths = get_image_paths(data_dir)
-    mapping = get_class_mapping()
-    idx_to_class = get_idx_to_class()
+    mapping = get_class_mapping(data_dir) 
+    idx_to_class = get_idx_to_class(data_dir)
     
     print(f"Found {len(paths)} images")
     print(f"Classes: {list(idx_to_class.values())}")

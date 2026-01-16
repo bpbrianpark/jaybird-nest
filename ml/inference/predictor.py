@@ -11,7 +11,50 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import base64
 
-def load_model(model_registry_dir):
+def infer_num_classes_from_model(model_path):
+    """Infer the number of classes from the model's output layer size."""
+    state_dict = torch.load(model_path, map_location='cpu')
+    
+    # Look for the final linear layer in the classifier
+    for key in state_dict.keys():
+        if 'classifier' in key and 'weight' in key:
+            weight_shape = state_dict[key].shape
+            if len(weight_shape) == 2:
+                num_classes = weight_shape[0]
+                print(f"Inferred {num_classes} classes from model layer '{key}' (shape: {weight_shape})")
+                return num_classes
+    
+    raise ValueError("Could not infer number of classes from model state dict")
+
+def detect_classes_from_dataset(data_dir):
+    """Detect class names from dataset folder structure."""
+    data_path = Path(data_dir)
+    if not data_path.exists():
+        return None
+    
+    # Look for folders that contain images
+    image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.bmp'}
+    classes = []
+    
+    for item in data_path.iterdir():
+        if item.is_dir():
+            # Check if this directory contains images
+            has_images = any(
+                child.suffix.lower() in image_extensions 
+                for child in item.iterdir() 
+                if child.is_file()
+            )
+            if has_images:
+                classes.append(item.name.lower().strip())
+    
+    if classes:
+        classes.sort() 
+        print(f"Detected {len(classes)} classes from dataset folders: {classes}")
+        return classes
+    
+    return None
+
+def load_model(model_registry_dir, dataset_dir=None):
     registry_path = Path(model_registry_dir)
 
     if not registry_path.exists():
@@ -39,13 +82,31 @@ def load_model(model_registry_dir):
         print(f"Loaded metadata from {metadata_path}")
     else:
         print(f"WARNING: Metadata not found at {metadata_path}")
-        print("Using default metadata. Model will still work, but with default settings.")
+        print("Attempting to infer classes automatically...")
         
-        default_classes = ['barred_owl', 'bear', 'coyote', 'hummingbird', 'osprey', 'sandhill_crane']
+        # Infer number of classes from model
+        num_classes = infer_num_classes_from_model(latest_model)
+        
+        # Try to detect class names from dataset folders
+        detected_classes = None
+        if dataset_dir:
+            detected_classes = detect_classes_from_dataset(dataset_dir)
+        
+        # Use detected classes or create generic names
+        if detected_classes and len(detected_classes) == num_classes:
+            classes = detected_classes
+            print(f"Using classes detected from dataset: {classes}")
+        else:
+            # Create generic class names
+            classes = [f"class_{i}" for i in range(num_classes)]
+            print(f"Using generic class names: {classes}")
+            if detected_classes:
+                print(f"Warning: Detected {len(detected_classes)} classes from dataset, but model expects {num_classes}")
+        
         metadata = {
             "version": f"v{version}",
-            "classes": default_classes,
-            "class_to_idx": {cls: i for i, cls in enumerate(default_classes)},
+            "classes": classes,
+            "class_to_idx": {cls: i for i, cls in enumerate(classes)},
             "preprocessing": {
                 "input_size": [224, 224],
                 "mean": [0.485, 0.456, 0.406],
@@ -53,10 +114,9 @@ def load_model(model_registry_dir):
             },
             "model_architecture": "MobileNetV3",
             "training_metrics": {
-                "note": "Metadata not found - using defaults"
+                "note": "Metadata not found - classes inferred automatically"
             }
         }
-        print(f"Using default classes: {default_classes}")
 
     # Load model
     model = models.mobilenet_v3_small(weights=None)
@@ -163,7 +223,11 @@ async def load_model_at_startup():
         script_dir = Path(__file__).parent.parent.parent 
         model_registry_path = script_dir / "model_registry"
         
-        model, metadata = load_model(str(model_registry_path))
+        dataset_dir = script_dir / "photo_data"
+        if not dataset_dir.exists():
+            dataset_dir = None
+        
+        model, metadata = load_model(str(model_registry_path), dataset_dir=str(dataset_dir) if dataset_dir else None)
         print("Model loaded successfully at startup!")
     except Exception as e:
         print(f"Error loading model: {e}")
