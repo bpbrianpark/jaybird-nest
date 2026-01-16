@@ -214,6 +214,7 @@ class InferenceResponse(BaseModel):
 
 model = None
 metadata = None
+CONFIDENCE_THRESHOLD = 0.5
 
 @app.on_event("startup")
 async def load_model_at_startup():
@@ -266,9 +267,18 @@ def infer(request: InferenceRequest):
             for key, value in confidence_dict.items()
         }
         
+        # Only return tags if confidence is above threshold
+        tags = []
+        if confidence >= CONFIDENCE_THRESHOLD:
+            formatted_class_name = format_class_name(class_name)
+            tags = [formatted_class_name]
+            print(f"Prediction: {formatted_class_name} (confidence: {confidence:.3f}) - ABOVE THRESHOLD")
+        else:
+            print(f"Prediction: {format_class_name(class_name)} (confidence: {confidence:.3f}) - BELOW THRESHOLD ({CONFIDENCE_THRESHOLD}), not tagging")
+        
         # Return in format expected
         return InferenceResponse(
-            tags=[formatted_class_name],
+            tags=tags,
             confidence=formatted_confidence_dict
         )
     
